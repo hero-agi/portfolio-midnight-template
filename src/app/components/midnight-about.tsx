@@ -1,7 +1,119 @@
-import { Github, Linkedin, Mail, MapPin, Twitter } from 'lucide-react';
+import { Github, Linkedin, Mail, MapPin } from 'lucide-react';
 import type { PortfolioProfile, PortfolioContact } from '../data/types';
 
 interface Props { profile: PortfolioProfile; contact: PortfolioContact; }
+
+// Assign proficiency levels: first badges = primary skills = higher level
+const DEFAULT_LEVELS = [95, 90, 88, 85, 82, 80, 78, 76];
+
+function RadarChart({ badges }: { badges: string[] }) {
+  const skills = badges.slice(0, 8).map((name, i) => ({
+    name,
+    level: DEFAULT_LEVELS[i] ?? 75,
+  }));
+
+  const n = skills.length;
+  if (n < 3) return null;
+
+  const cx = 160;
+  const cy = 155;
+  const r = 100;
+  const labelR = r + 28;
+
+  const angle = (i: number) => (i * 2 * Math.PI) / n - Math.PI / 2;
+
+  const pt = (i: number, radius: number) => ({
+    x: cx + radius * Math.cos(angle(i)),
+    y: cy + radius * Math.sin(angle(i)),
+  });
+
+  const polygonPts = (radius: number) =>
+    skills.map((_, i) => `${pt(i, radius).x},${pt(i, radius).y}`).join(' ');
+
+  const skillPts = skills.map((s, i) => pt(i, r * s.level / 100));
+
+  return (
+    <svg viewBox="0 0 320 310" className="w-full max-w-xs mx-auto" aria-hidden="true">
+      <defs>
+        <linearGradient id="radarFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
+        </linearGradient>
+        <linearGradient id="radarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8b5cf6" />
+          <stop offset="100%" stopColor="#22d3ee" />
+        </linearGradient>
+      </defs>
+
+      {/* Grid rings */}
+      {[25, 50, 75, 100].map(pct => (
+        <polygon
+          key={pct}
+          points={polygonPts(r * pct / 100)}
+          fill="none"
+          stroke="rgba(255,255,255,0.07)"
+          strokeWidth="1"
+        />
+      ))}
+
+      {/* Axis spokes */}
+      {skills.map((_, i) => {
+        const end = pt(i, r);
+        return (
+          <line
+            key={i}
+            x1={cx} y1={cy}
+            x2={end.x} y2={end.y}
+            stroke="rgba(255,255,255,0.07)"
+            strokeWidth="1"
+          />
+        );
+      })}
+
+      {/* Filled skill polygon */}
+      <polygon
+        points={skillPts.map(p => `${p.x},${p.y}`).join(' ')}
+        fill="url(#radarFill)"
+        stroke="url(#radarStroke)"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+
+      {/* Skill dots */}
+      {skillPts.map((p, i) => (
+        <g key={i}>
+          <circle cx={p.x} cy={p.y} r="5" fill="#8b5cf6" />
+          <circle cx={p.x} cy={p.y} r="3" fill="#e0d7ff" />
+        </g>
+      ))}
+
+      {/* Skill labels */}
+      {skills.map((s, i) => {
+        const lp = pt(i, labelR);
+        const anchor =
+          lp.x < cx - 5 ? 'end' : lp.x > cx + 5 ? 'start' : 'middle';
+        return (
+          <text
+            key={i}
+            x={lp.x}
+            y={lp.y}
+            textAnchor={anchor}
+            dominantBaseline="middle"
+            fill="rgba(255,255,255,0.75)"
+            fontSize="11"
+            fontFamily="Inter, sans-serif"
+            fontWeight="500"
+          >
+            {s.name}
+          </text>
+        );
+      })}
+
+      {/* Center dot */}
+      <circle cx={cx} cy={cy} r="3" fill="rgba(255,255,255,0.15)" />
+    </svg>
+  );
+}
 
 export function MidnightAbout({ profile, contact }: Props) {
   const socials = [
@@ -22,20 +134,22 @@ export function MidnightAbout({ profile, contact }: Props) {
         </h2>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-10">
+      <div className="grid lg:grid-cols-2 gap-12 items-start">
+        {/* Left — description + radar chart */}
         <div>
-          <p className="text-white/70 mb-8" style={{ lineHeight: 1.7 }}>{profile.description}</p>
-          {profile.badges.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {profile.badges.map(s => (
-                <span key={s} className="px-3 py-1.5 rounded-full bg-violet-600/15 border border-violet-500/30 text-violet-200" style={{ fontSize: 13 }}>
-                  {s}
-                </span>
-              ))}
+          <p className="text-white/70 mb-10" style={{ lineHeight: 1.7 }}>{profile.description}</p>
+
+          {profile.badges.length >= 3 && (
+            <div>
+              <div className="text-white/40 uppercase tracking-[0.2em] mb-6 text-center" style={{ fontSize: 11 }}>
+                Skills
+              </div>
+              <RadarChart badges={profile.badges} />
             </div>
           )}
         </div>
 
+        {/* Right — status card + socials */}
         <div className="space-y-5">
           <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-xl">
             <div className="flex items-center gap-2 mb-2">
