@@ -3,41 +3,16 @@ import type { PortfolioData } from './types';
 
 const FALLBACK: PortfolioData = {
   profile: {
-    name: 'Tu Nombre',
-    title: 'Full Stack Developer',
-    photo: '',
-    description: 'Construyo productos digitales que combinan diseño y tecnología. Especializado en aplicaciones web de alto rendimiento y experiencias de usuario que realmente importan.',
-    badges: ['React', 'TypeScript', 'Python', 'FastAPI', 'Tailwind'],
-    stats: { years: 5, projects: 30, companies: 8 },
-    availableText: 'Disponible para proyectos',
+    name: 'Your Name',
+    title: 'Full-Stack Developer',
+    description: 'Building products people love. Open to new opportunities.',
+    badges: ['React', 'TypeScript', 'Node.js', 'Python', 'Figma'],
+    stats: { years: 3, projects: 12, companies: 4 },
+    availableText: 'Available for new projects',
   },
-  projects: [
-    {
-      title: 'Dashboard Analytics',
-      category: 'Data',
-      image: '',
-      problem: 'El equipo tardaba horas en generar reportes manuales.',
-      solution: 'Plataforma de visualización en tiempo real con Power BI.',
-      result: '-60% tiempo de reportes. Adoptado por todo el equipo.',
-      tags: ['Power BI', 'SQL', 'Python'],
-      demoUrl: '',
-      githubUrl: '',
-    },
-  ],
-  experience: [
-    {
-      company: 'Tu Empresa',
-      role: 'Senior Developer',
-      period: '2022 — Presente',
-      description: 'Desarrollé soluciones de alto impacto para clientes enterprise en LATAM.',
-    },
-  ],
-  contact: {
-    email: 'tu@email.com',
-    linkedin: '',
-    github: '',
-    twitter: '',
-  },
+  projects: [],
+  experience: [],
+  contact: { email: 'hello@example.com' },
 };
 
 export function usePortfolioData() {
@@ -45,11 +20,8 @@ export function usePortfolioData() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/portfolio-data/data.json')
-      .then(r => {
-        if (!r.ok) throw new Error('No data.json');
-        return r.json();
-      })
+    fetch(`${import.meta.env.BASE_URL}portfolio-data/data.json`)
+      .then(r => { if (!r.ok) throw new Error('No data.json'); return r.json(); })
       .then((d: PortfolioData) => setData(d))
       .catch(() => setData(FALLBACK))
       .finally(() => setLoading(false));
